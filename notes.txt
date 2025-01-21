@@ -1,0 +1,122 @@
+'WpList contains all needed data
+'WordMap setSorting order, after/in init - done
+'WordMap SaveToMem: grid + wpList - wpList only! - wpBest, done
+'start threads
+'check best
+'WordMap display & save to disc, from mem
+'check equal sorted lists
+
+'wordMap.recursiveBase(0)
+'wordMap.recursiveOpt(0)
+'wordMap.uglySolver()
+
+'print "cntSkipRowNoFit " + str(wordMap.cntSkipRowNoFit)
+'print "cntSkipRowNoCon " + str(wordMap.cntSkipRowNoCon)
+'print "cntSkipColNoFit " + str(wordMap.cntSkipColNoFit)
+'print "cntSkipColNoCon " + str(wordMap.cntSkipColNoCon)
+
+' === TODO/TRY ===
+'-randomize first half of list?
+'-shared buffer for erasedStr?
+'-multiple threads each with different word order
+'-sort: pebbels to sand
+'-sort: most occur char
+'-bitMask = 1 shl (word[iChar] - asc("A")) : Precalculate?
+'-set maxGap after adding / removing word?
+'-rollling list place & remove. Different algo/approach
+'-in recursiveMagic: remove depth = 0 test for loop
+'-precalculate stuff?
+'-add gap test to recursiveSmart?
+'-milti-threading
+'-find least grid size
+
+' === DON'T ===
+'run word list in reverse => both will find all solutions: NO.
+'-limit recursion?
+'-plamement ranges from dyn. word list
+'-keep track of current board size used? Less positions to try? Included in bitmaptest!
+'-fix double results of recursiveSmart
+
+' === LINKS ===
+'-https://arxiv.org/abs/2007.04663
+'-https://www.semanticscholar.org/paper/Automation-Strategies-for-Unconstrained-Crossword-Agarwal-Joshi/79e0843b1fdbb2691c6269f5fc40d0c3235ff099
+
+'=== speed ===
+'01-12-2024, F8: tc 20 M, pc 54 k
+'01-12-2024, F9: tc 62 M, pc 169 k => 66.6 sec, 1904 solutions
+
+'-testToMapCollide() variable lastChar for len(word)-1 => no improvement
+'04-12-2024, F9: tc 62 M, pc 169 k => 66.6 sec, 1904 solutions
+
+'-testToMapCollide() select case in step 2 => a bit slower
+'04-12-2024, F9: tc 59 M, pc 160 k => 71 sec, 1904 solutions
+
+'-testToMapCollide() do not check out of board for each char => No or minimal improvement
+
+'-changes only: place char, remove char: how??? => with eraseStr
+'04-12-2024, F9: tc 68 M, pc 183 k => 62 sec, 1904 solutions
+
+'-for/next-loops instead of nextPos() function !!!
+'05-12-2024, F9: tc 88 M, pc 238 k => 48 sec, 1904 solutions
+
+'Display mask: &h0fff => &h0ffff
+'05-12-2024, F9: tc 95 M, pc 255 k => 45 sec, 1904 solutions
+
+'-Keep track of total place char in row/col in same direction. Max to place is grid size - (len + 1)
+'12-12-2024, F9: tc 70 M, pc 190 k => 52 sec, 1904 solutions
+
+'-Split horz / vert? Function for save() and showStats() also for multithreading better?
+'-And 1 x test per row/col for space check
+'16-12-2024: 44.0 sec
+
+'-bitmask row/col for characters?
+'17-12-2024: Almost no speed gain, test pretty useless. No bug.
+
+'col/rowBitmapPrev must be local var like erasedStr or global 2d-array with depth.
+'19-12-2024: 33.6 sec, 1904 solutions
+
+'disable rowCharCount(), colCharCount():
+'23-12-2024: 34.8 sec
+
+'Using maxGap with sdRowList(), sdColList():
+'23-12-2024: 33.4 sec / 34.3 sec, 1904 solutions
+
+'-copyToMap kan sneller => minimale verbetering
+'23-12-2024: 34.0 sec
+
+'testToMapCollide: ubr = ubound(wordMap, ROW_DIM), ubc = ...,
+'test charCollision before below/under check. 2 loops.
+'23-12-2024: 34.8 sec. Slower ?! Compiler fight ?
+
+'F9: 92.7 sec, F9: 33.3 sec
+
+'Code converted to multi-file classes & wordBitMask = entries.wordBitMask(depth)
+'F9: 02-01-2025: 33.7 sec
+
+'recursiveMagic0: bitMask test disabled
+'F9: 02-01-2025: 45.3 sec
+
+'recursiveMagic0: bitMask test disabled & gap test disabled & other precalculated values undone
+'F9: 02-01-2025: 47.2 sec
+
+'05-01-2025 fastSolver (non-recursive):
+'F8: 154.2 sec
+'F9: 54.7 sec
+'F9: 54.7 sec less ori
+'F9: 55.3 sec less col
+'F9: 55.8 sec less word, row: trouble
+
+'Data set '22 fruit'
+'F9: recursiveMagic0: 9.1 sec, 12 sol.
+'F9: recursiveMagic1: 6.3 sec, 12 sol.
+'F9: uglySolver: 11.5 sec, 12 sol.
+
+'Optimizing recursiveSmart0/1
+'07-01-2025 F9: 4.9 sec -> 4.3 sec
+'Dataset fusion: F9: 23.5
+
+'21.77 - 2 threads
+'21.27 - disabled shared timers
+'21.27 - sleep 1 -> sleep 1,1
+'21.0 - sleep 1,1 disabled
+'6.0 - 1 thread
